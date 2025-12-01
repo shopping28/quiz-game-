@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Block Users</title>
+    <style>
+        body { background: #111; color: #ddd; font-family: sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #D4AF37; padding-bottom: 15px; }
+        a { color: #D4AF37; }
+        
+        .user-row { display: flex; justify-content: space-between; align-items: center; background: #1a1a1a; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 3px solid #555; }
+        .blocked { border-left-color: red; opacity: 0.7; }
+        
+        button { padding: 5px 15px; cursor: pointer; border: none; font-weight: bold; }
+        .btn-block { background: red; color: white; }
+        .btn-unblock { background: green; color: white; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>MANAGE ACCESS</h2>
+        <a href="index.html">Back</a>
+    </div>
+    <br>
+    <div id="userList">Loading...</div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'users'), (snap) => {
+            const list = document.getElementById('userList');
+            list.innerHTML = '';
+            
+            snap.forEach(c => {
+                const u = c.val();
+                if(u.status !== 'pending') { // Only show active/blocked
+                    const isBlocked = u.status === 'blocked';
+                    const div = document.createElement('div');
+                    div.className = `user-row ${isBlocked ? 'blocked' : ''}`;
+                    div.innerHTML = `
+                        <div>
+                            <strong>${u.fname} ${u.lname}</strong> (${u.phone})<br>
+                            Status: ${u.status.toUpperCase()}
+                        </div>
+                        <button class="${isBlocked ? 'btn-unblock' : 'btn-block'}" 
+                                onclick="toggleBlock('${u.phone}', ${isBlocked})">
+                            ${isBlocked ? 'UNBLOCK' : 'BLOCK'}
+                        </button>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        });
+
+        window.toggleBlock = (phone, isBlocked) => {
+            const newStatus = isBlocked ? 'active' : 'blocked';
+            update(ref(db, `users/${phone}`), { status: newStatus });
+        }
+    </script>
+</body>
+</html>
