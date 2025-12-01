@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Season Settings</title>
+    <style>
+        body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: #111; padding: 40px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        h2 { color: #D4AF37; text-align: center; margin-bottom: 30px; }
+        
+        .inp-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #888; }
+        input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
+        
+        button { width: 100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
+        button:hover { box-shadow: 0 0 15px #D4AF37; }
+        .back { text-align: center; display: block; margin-top: 15px; color: #666; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>SEASON CONTROL</h2>
+        
+        <div class="inp-group">
+            <label>Season Name</label>
+            <input type="text" id="sName" placeholder="e.g. Art Quiz Season 2">
+        </div>
+
+        <div class="inp-group">
+            <label>Start Date</label>
+            <input type="date" id="sDate">
+        </div>
+
+        <div class="inp-group">
+            <label>Start Time (24h)</label>
+            <input type="time" id="sTime">
+        </div>
+
+        <div class="inp-group">
+            <label>Total Prize Pool ($)</label>
+            <input type="text" id="prize" placeholder="$1000">
+        </div>
+
+        <button onclick="saveSettings()">SAVE SETTINGS</button>
+        <a href="index.html" class="back">Cancel</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.saveSettings = () => {
+            const data = {
+                seasonName: document.getElementById('sName').value,
+                startDate: document.getElementById('sDate').value,
+                startTime: document.getElementById('sTime').value,
+                prize: document.getElementById('prize').value
+            };
+            
+            update(ref(db, 'game_settings'), data)
+            .then(() => alert("Season Updated Successfully!"))
+            .catch(e => alert(e.message));
+        }
+    </script>
+</body>
+</html>
