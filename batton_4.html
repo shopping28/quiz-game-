@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Leaderboard Admin</title>
+    <style>
+        body { background: #050505; color: #eee; font-family: sans-serif; padding: 20px; }
+        .header { border-bottom: 1px solid #D4AF37; padding-bottom: 15px; display: flex; justify-content: space-between; }
+        a { color: #D4AF37; text-decoration: none; }
+        
+        .prize-setup { background: #111; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #333; }
+        .prize-setup input { background: #222; border: 1px solid #444; color: white; padding: 8px; width: 60%; margin-right: 10px; }
+        .prize-setup button { background: #D4AF37; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; color: #D4AF37; border-bottom: 1px solid #444; padding: 10px; }
+        td { padding: 10px; border-bottom: 1px solid #222; }
+        .top-rank { color: #FFD700; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>LEADERBOARD & PRIZES</h2>
+        <a href="index.html">Back</a>
+    </div>
+
+    <div class="prize-setup">
+        <h3>Update Winners Display</h3>
+        <p>This text appears on the user's home screen marquee.</p>
+        <input type="text" id="winnerText" placeholder="e.g. Top Winner: UserX ($500)">
+        <button onclick="updatePrizes()">UPDATE</button>
+    </div>
+
+    <h3>Current Top 10 Live</h3>
+    <table id="lbTable">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Fetch Live Ranking
+        onValue(ref(db, 'users'), (snap) => {
+            const users = [];
+            snap.forEach(c => users.push(c.val()));
+            
+            // Sort Descending
+            users.sort((a, b) => (b.score || 0) - (a.score || 0));
+            
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            
+            users.slice(0, 10).forEach((u, i) => {
+                tbody.innerHTML += `
+                    <tr class="${i < 3 ? 'top-rank' : ''}">
+                        <td>#${i + 1}</td>
+                        <td>${u.fname} ${u.lname}</td>
+                        <td>${u.score || 0}</td>
+                    </tr>
+                `;
+            });
+        });
+
+        window.updatePrizes = () => {
+            const txt = document.getElementById('winnerText').value;
+            set(ref(db, 'game_settings/topWinner'), txt).then(() => alert("Updated!"));
+        }
+    </script>
+</body>
+</html>
