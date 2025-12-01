@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Question List</title>
+    <style>
+        body { background: #0a0a0a; color: #ccc; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #D4AF37; padding-bottom: 15px; margin-bottom: 20px; }
+        h2 { color: #D4AF37; margin: 0; }
+        .btn-back { color: #D4AF37; text-decoration: none; }
+        
+        .controls { margin-bottom: 15px; display: flex; gap: 10px; }
+        .btn-danger { background: #800; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-danger:hover { background: #a00; }
+
+        .q-list { display: flex; flex-direction: column; gap: 10px; }
+        
+        .q-card { 
+            background: #161616; padding: 15px; border-radius: 8px; border: 1px solid #333; 
+            display: flex; gap: 15px; align-items: flex-start; 
+        }
+        .q-card:hover { border-color: #555; }
+
+        .q-info { flex: 1; }
+        .q-text { color: #fff; font-size: 1.1rem; margin-bottom: 5px; font-weight: bold; }
+        .q-meta { font-size: 0.85rem; color: #888; }
+        
+        .del-icon { 
+            background: transparent; border: 1px solid #555; color: #888; 
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+        }
+        .del-icon:hover { background: #800; color: #fff; border-color: #800; }
+        
+        .chk { width: 18px; height: 18px; margin-top: 5px; accent-color: #D4AF37; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h2>QUESTION MANAGER</h2>
+            <a href="batton_3.html" class="btn-back">❮ Add Questions</a>
+        </div>
+
+        <div class="controls">
+            <button class="btn-danger" onclick="deleteSelected()">DELETE SELECTED</button>
+        </div>
+
+        <div id="list" class="q-list">
+            <div style="text-align:center; margin-top:50px;">Loading Questions...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Load Questions
+        onValue(ref(db, 'questions'), (snap) => {
+            const list = document.getElementById('list');
+            list.innerHTML = "";
+
+            if(!snap.exists()) {
+                list.innerHTML = "<div style='text-align:center; color:#666'>No questions found.</div>";
+                return;
+            }
+
+            snap.forEach(child => {
+                const key = child.key;
+                const data = child.val();
+                
+                const div = document.createElement('div');
+                div.className = 'q-card';
+                div.innerHTML = `
+                    <input type="checkbox" class="chk" value="${key}">
+                    <div class="q-info">
+                        <div class="q-text">${data.text}</div>
+                        <div class="q-meta">
+                            View: ${data.viewTime}s | Ans: ${data.ansTime}s | Next Wait: ${data.nextDelayMinutes} min<br>
+                            Ans: ${data.options[data.correctIndex]}
+                        </div>
+                    </div>
+                    <button class="del-icon" onclick="deleteSingle('${key}')">🗑</button>
+                `;
+                list.appendChild(div);
+            });
+        });
+
+        // Delete Single
+        window.deleteSingle = (key) => {
+            if(confirm("Delete this question?")) {
+                remove(ref(db, `questions/${key}`));
+            }
+        }
+
+        // Delete Selected
+        window.deleteSelected = () => {
+            const checkboxes = document.querySelectorAll('.chk:checked');
+            if(checkboxes.length === 0) return alert("No questions selected.");
+            
+            if(confirm(`Are you sure you want to delete ${checkboxes.length} questions?`)) {
+                checkboxes.forEach(box => {
+                    remove(ref(db, `questions/${box.value}`));
+                });
+            }
+        }
+    </script>
+</body>
+</html>
