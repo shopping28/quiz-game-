@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Question</title>
+    <style>
+        body { background: #0a0a0a; color: #ccc; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 600px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px; }
+        a { color: #D4AF37; text-decoration: none; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; color: #D4AF37; margin-bottom: 5px; font-size: 0.9rem; }
+        input, select, textarea { width: 100%; background: #1a1a1a; border: 1px solid #333; color: white; padding: 12px; border-radius: 5px; box-sizing: border-box; }
+        textarea { resize: vertical; height: 80px; }
+        
+        button { width: 100%; padding: 15px; background: #D4AF37; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1rem; }
+        button:hover { background: #b8962e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>ADD NEW QUESTION</h2>
+            <a href="index.html">Back</a>
+        </div>
+
+        <div class="form-group">
+            <label>Question Text</label>
+            <textarea id="qText" placeholder="Enter the question..."></textarea>
+        </div>
+
+        <div class="form-group" style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <label>View Time (Seconds)</label>
+                <input type="number" id="viewTime" value="10">
+            </div>
+            <div style="flex:1">
+                <label>Answer Time (Seconds)</label>
+                <input type="number" id="ansTime" value="10">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Options</label>
+            <input type="text" id="opt0" placeholder="Option 1" style="margin-bottom:5px">
+            <input type="text" id="opt1" placeholder="Option 2" style="margin-bottom:5px">
+            <input type="text" id="opt2" placeholder="Option 3" style="margin-bottom:5px">
+            <input type="text" id="opt3" placeholder="Option 4">
+        </div>
+
+        <div class="form-group">
+            <label>Correct Answer</label>
+            <select id="correctIdx">
+                <option value="0">Option 1</option>
+                <option value="1">Option 2</option>
+                <option value="2">Option 3</option>
+                <option value="3">Option 4</option>
+            </select>
+        </div>
+
+        <button onclick="saveQuestion()">PUBLISH QUESTION</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        window.saveQuestion = () => {
+            const q = document.getElementById('qText').value;
+            const vt = document.getElementById('viewTime').value;
+            const opts = [
+                document.getElementById('opt0').value,
+                document.getElementById('opt1').value,
+                document.getElementById('opt2').value,
+                document.getElementById('opt3').value
+            ];
+            
+            if(!q || opts.includes("")) return alert("Fill all fields");
+
+            const data = {
+                text: q,
+                viewTime: vt,
+                options: opts,
+                correctIndex: parseInt(document.getElementById('correctIdx').value)
+            };
+
+            push(ref(db, 'questions'), data)
+            .then(() => {
+                alert("Success!");
+                location.reload();
+            })
+            .catch(e => alert(e.message));
+        }
+    </script>
+</body>
+</html>
