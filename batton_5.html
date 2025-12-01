@@ -5,11 +5,11 @@
     <title>Season Settings</title>
     <style>
         body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .card { background: #111; padding: 40px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 400px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        .card { background: #111; padding: 40px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 450px; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
         h2 { color: #D4AF37; text-align: center; margin-bottom: 30px; }
         
         .inp-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: #888; }
+        label { display: block; margin-bottom: 5px; color: #D4AF37; font-size: 0.9rem; }
         input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         
         button { width: 100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
@@ -20,7 +20,7 @@
 <body>
 
     <div class="card">
-        <h2>SEASON CONTROL</h2>
+        <h2>SEASON & LIMITS</h2>
         
         <div class="inp-group">
             <label>Season Name</label>
@@ -37,6 +37,13 @@
             <input type="time" id="sTime">
         </div>
 
+        <!-- NEW: QUESTION LIMIT -->
+        <div class="inp-group" style="border: 1px dashed #444; padding: 10px; border-radius: 5px;">
+            <label>Max Questions Per User (Limit)</label>
+            <input type="number" id="maxQ" placeholder="e.g. 10">
+            <small style="color:#888; font-size:0.7rem;">If 10, user stops after 10 answers.</small>
+        </div>
+
         <div class="inp-group">
             <label>Total Prize Pool ($)</label>
             <input type="text" id="prize" placeholder="$1000">
@@ -48,22 +55,35 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, update, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        // Load current settings
+        get(ref(db, 'game_settings')).then(snap => {
+            if(snap.exists()) {
+                const s = snap.val();
+                document.getElementById('sName').value = s.seasonName || "";
+                document.getElementById('sDate').value = s.startDate || "";
+                document.getElementById('sTime').value = s.startTime || "";
+                document.getElementById('prize').value = s.prize || "";
+                document.getElementById('maxQ').value = s.maxQuestions || ""; // Load Limit
+            }
+        });
 
         window.saveSettings = () => {
             const data = {
                 seasonName: document.getElementById('sName').value,
                 startDate: document.getElementById('sDate').value,
                 startTime: document.getElementById('sTime').value,
-                prize: document.getElementById('prize').value
+                prize: document.getElementById('prize').value,
+                maxQuestions: parseInt(document.getElementById('maxQ').value) // Save Limit
             };
             
             update(ref(db, 'game_settings'), data)
-            .then(() => alert("Season Updated Successfully!"))
+            .then(() => alert("Season & Limits Updated Successfully!"))
             .catch(e => alert(e.message));
         }
     </script>
