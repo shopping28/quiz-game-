@@ -2,12 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add Question</title>
+    <title>Add Question - Admin</title>
     <style>
-        body { background: #0a0a0a; color: #ccc; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+        body { background: #0a0a0a; color: #ccc; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
         .container { width: 100%; max-width: 600px; }
-        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #D4AF37; padding-bottom: 10px; margin-bottom: 20px; }
-        a { color: #D4AF37; text-decoration: none; }
+        
+        .header { display: flex; flex-direction: column; border-bottom: 1px solid #D4AF37; padding-bottom: 15px; margin-bottom: 20px; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; }
+        .stats-row { margin-top: 10px; color: #888; font-size: 0.9rem; }
+        h2 { margin: 0; color: #D4AF37; }
+        a { color: #D4AF37; text-decoration: none; font-weight: bold; }
+        
+        .nav-btn {
+            background: #222; color: #fff; padding: 8px 15px; 
+            border: 1px solid #D4AF37; border-radius: 5px; text-decoration: none; display: inline-block;
+        }
+
+        .section-title { color: #fff; margin-top: 30px; border-left: 3px solid #D4AF37; padding-left: 10px; }
         
         .form-group { margin-bottom: 15px; }
         label { display: block; color: #D4AF37; margin-bottom: 5px; font-size: 0.9rem; }
@@ -16,15 +27,28 @@
         
         button { width: 100%; padding: 15px; background: #D4AF37; color: black; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; font-size: 1rem; }
         button:hover { background: #b8962e; }
+
+        .json-box { background: #111; padding: 15px; border: 1px dashed #444; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>ADD NEW QUESTION</h2>
-            <a href="index.html">Back</a>
+            <div class="top-row">
+                <h2>ADD QUESTION</h2>
+                <a href="index.html">Back to Dashboard</a>
+            </div>
+            <div class="stats-row">
+                Total Questions in DB: <span id="qCount" style="color:#D4AF37; font-weight:bold;">Loading...</span>
+            </div>
+            <div style="margin-top: 15px; text-align: right;">
+                <a href="batton_3_list.html" class="nav-btn">📂 Manage / Delete Question List</a>
+            </div>
         </div>
 
+        <!-- MANUAL ADD -->
+        <h3 class="section-title">Manual Entry</h3>
+        
         <div class="form-group">
             <label>Question Text</label>
             <textarea id="qText" placeholder="Enter the question..."></textarea>
@@ -39,6 +63,12 @@
                 <label>Answer Time (Seconds)</label>
                 <input type="number" id="ansTime" value="10">
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Delay Before Next Question (Minutes)</label>
+            <input type="number" id="nextDelay" value="5" placeholder="e.g. 5">
+            <small style="color:#666">After this question ends, wait X minutes for the next one.</small>
         </div>
 
         <div class="form-group">
@@ -59,20 +89,37 @@
             </select>
         </div>
 
-        <button onclick="saveQuestion()">PUBLISH QUESTION</button>
+        <button onclick="saveQuestion()">PUBLISH SINGLE QUESTION</button>
+
+        <!-- JSON IMPORT -->
+        <h3 class="section-title">Import JSON File</h3>
+        <div class="json-box">
+            <label>Select .json file</label>
+            <input type="file" id="jsonFile" accept=".json">
+            <button onclick="uploadJson()" style="background:#333; color:#fff; border:1px solid #555;">UPLOAD JSON</button>
+        </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // 1. Live Question Counter
+        onValue(ref(db, 'questions'), (snap) => {
+            const count = snap.exists() ? Object.keys(snap.val()).length : 0;
+            document.getElementById('qCount').innerText = count;
+        });
+
+        // 2. Save Single Question
         window.saveQuestion = () => {
             const q = document.getElementById('qText').value;
             const vt = document.getElementById('viewTime').value;
+            const at = document.getElementById('ansTime').value;
+            const delay = document.getElementById('nextDelay').value;
             const opts = [
                 document.getElementById('opt0').value,
                 document.getElementById('opt1').value,
@@ -80,21 +127,52 @@
                 document.getElementById('opt3').value
             ];
             
-            if(!q || opts.includes("")) return alert("Fill all fields");
+            if(!q || opts.includes("") || !delay) return alert("Fill all fields");
 
             const data = {
                 text: q,
                 viewTime: vt,
+                ansTime: at,
+                nextDelayMinutes: delay, // Time to wait after this question
                 options: opts,
                 correctIndex: parseInt(document.getElementById('correctIdx').value)
             };
 
             push(ref(db, 'questions'), data)
             .then(() => {
-                alert("Success!");
-                location.reload();
+                alert("Question Added!");
+                // Clear inputs
+                document.getElementById('qText').value = "";
+                document.getElementById('opt0').value = "";
+                document.getElementById('opt1').value = "";
+                document.getElementById('opt2').value = "";
+                document.getElementById('opt3').value = "";
             })
             .catch(e => alert(e.message));
+        }
+
+        // 3. Upload JSON
+        window.uploadJson = () => {
+            const file = document.getElementById('jsonFile').files[0];
+            if(!file) return alert("Please select a file");
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const questions = JSON.parse(e.target.result);
+                    if(!Array.isArray(questions)) throw new Error("JSON must be an array []");
+                    
+                    let count = 0;
+                    questions.forEach(q => {
+                        push(ref(db, 'questions'), q);
+                        count++;
+                    });
+                    alert(`Successfully imported ${count} questions!`);
+                } catch(err) {
+                    alert("Invalid JSON format: " + err.message);
+                }
+            };
+            reader.readAsText(file);
         }
     </script>
 </body>
