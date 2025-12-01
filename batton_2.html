@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Requests</title>
+    <style>
+        body { background: #0a0a0a; color: white; font-family: sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 20px; }
+        a { color: #D4AF37; text-decoration: none; }
+        
+        .req-card { background: #141414; border-left: 4px solid #D4AF37; padding: 20px; margin-top: 15px; display: flex; justify-content: space-between; align-items: center; border-radius: 5px; }
+        .btn { padding: 8px 20px; border: none; cursor: pointer; border-radius: 3px; font-weight: bold; margin-left: 10px; }
+        .accept { background: #D4AF37; color: black; }
+        .reject { background: #333; color: white; border: 1px solid #555; }
+        .reject:hover { background: #800; border-color: red; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>PENDING REQUESTS</h2>
+        <a href="index.html">Back</a>
+    </div>
+
+    <div id="requestList">
+        <p>Checking for new requests...</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue, update, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        onValue(ref(db, 'users'), (snapshot) => {
+            const list = document.getElementById('requestList');
+            list.innerHTML = '';
+            let count = 0;
+            
+            snapshot.forEach(child => {
+                const u = child.val();
+                if(u.status === 'pending') {
+                    count++;
+                    const div = document.createElement('div');
+                    div.className = 'req-card';
+                    div.innerHTML = `
+                        <div>
+                            <h3>${u.fname} ${u.lname}</h3>
+                            <small>Phone: ${u.phone} | Shop ID: ${u.shopId}</small>
+                        </div>
+                        <div>
+                            <button class="btn accept" onclick="decide('${u.phone}', 'active')">ACCEPT</button>
+                            <button class="btn reject" onclick="decide('${u.phone}', 'delete')">REJECT</button>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+
+            if(count === 0) list.innerHTML = '<p style="color:#666">No pending requests.</p>';
+        });
+
+        window.decide = (phone, action) => {
+            if(action === 'active') {
+                update(ref(db, `users/${phone}`), { status: 'active' });
+            } else {
+                if(confirm('Delete this request permanently?')) {
+                    remove(ref(db, `users/${phone}`));
+                }
+            }
+        }
+    </script>
+</body>
+</html>
