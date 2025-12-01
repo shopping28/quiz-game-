@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Panel</title>
+    <style>
+        body { background: #0a0a0a; color: #eee; font-family: sans-serif; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+        a { color: #D4AF37; text-decoration: none; font-weight: bold; }
+        
+        table { width: 100%; border-collapse: collapse; background: #111; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #222; }
+        th { background: #1a1a1a; color: #D4AF37; text-transform: uppercase; font-size: 0.9rem; }
+        tr:hover { background: #161616; }
+        .stats { color: #888; font-size: 0.85rem; }
+        .search-box { padding: 10px; width: 300px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>USER DATABASE</h2>
+        <a href="index.html">← Back to Dashboard</a>
+    </div>
+    
+    <input type="text" class="search-box" id="search" placeholder="Search by Phone or Name..." onkeyup="filterUsers()">
+    <br><br>
+
+    <table id="userTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone / Shop ID</th>
+                <th>Status</th>
+                <th>Game Stats</th>
+            </tr>
+        </thead>
+        <tbody id="tbody">
+            <tr><td colspan="4">Loading data...</td></tr>
+        </tbody>
+    </table>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let allUsers = [];
+
+        onValue(ref(db, 'users'), (snapshot) => {
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            allUsers = [];
+
+            snapshot.forEach(child => {
+                const u = child.val();
+                allUsers.push(u);
+                renderRow(u, tbody);
+            });
+        });
+
+        function renderRow(u, tbody) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong style="color:#D4AF37">${u.fname} ${u.lname}</strong><br><small>UID: ${u.userId}</small></td>
+                <td>${u.phone}<br><small>Shop: ${u.shopId}</small></td>
+                <td>${u.status.toUpperCase()}</td>
+                <td class="stats">
+                    Score: <span style="color:#fff">${u.score || 0}</span> | 
+                    Correct: <span style="color:green">${u.correct || 0}</span> | 
+                    Wrong: <span style="color:red">${u.wrong || 0}</span>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        window.filterUsers = () => {
+            const term = document.getElementById('search').value.toLowerCase();
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            allUsers.forEach(u => {
+                if((u.fname + u.lname + u.phone).toLowerCase().includes(term)){
+                    renderRow(u, tbody);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
