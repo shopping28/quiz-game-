@@ -5,30 +5,41 @@
     <title>Season Settings</title>
     <style>
         body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #111; padding: 40px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 450px; }
+        .card { background: #111; padding: 30px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 500px; }
         h2 { color: #D4AF37; text-align: center; margin-bottom: 20px; }
         
-        .inp-group { margin-bottom: 15px; }
+        .inp-group { margin-bottom: 12px; }
         label { display: block; margin-bottom: 5px; color: #D4AF37; font-size: 0.9rem; }
         input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         
         .split { display: flex; gap: 10px; }
+
+        /* SAVE BUTTON */
+        .btn-save { width: 100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 5px; }
         
-        button { width: 100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        /* RESET BUTTON (DANGER) */
+        .reset-box { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; text-align: center; }
+        .btn-reset { 
+            width: 100%; padding: 15px; background: #800; color: #fff; 
+            border: 1px solid #f00; font-weight: bold; cursor: pointer; border-radius: 5px; 
+            transition: 0.3s;
+        }
+        .btn-reset:hover { background: #a00; box-shadow: 0 0 15px #f00; }
+        
         .back { text-align: center; display: block; margin-top: 15px; color: #666; text-decoration: none; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>SEASON CONTROL</h2>
+        <h2>SEASON MANAGEMENT</h2>
         
+        <!-- SEASON SETTINGS -->
         <div class="inp-group">
             <label>Season Name</label>
-            <input type="text" id="sName" placeholder="Season 1">
+            <input type="text" id="sName" placeholder="Season 2">
         </div>
 
-        <!-- START TIME -->
         <div class="inp-group">
             <label>Start Date & Time</label>
             <div class="split">
@@ -37,9 +48,8 @@
             </div>
         </div>
 
-        <!-- END TIME -->
-        <div class="inp-group" style="border: 1px solid #555; padding: 10px; border-radius: 5px;">
-            <label style="color:#ff4444">End Date & Time (Game Over)</label>
+        <div class="inp-group">
+            <label>End Date & Time</label>
             <div class="split">
                 <input type="date" id="eDate">
                 <input type="time" id="eTime">
@@ -48,21 +58,32 @@
 
         <div class="inp-group">
             <label>Max Questions Per User</label>
-            <input type="number" id="maxQ" placeholder="10">
+            <input type="number" id="maxQ">
         </div>
 
         <div class="inp-group">
             <label>Total Prize Pool</label>
-            <input type="text" id="prize" placeholder="$500">
+            <input type="text" id="prize">
         </div>
 
-        <button onclick="saveSettings()">UPDATE SEASON</button>
-        <a href="index.html" class="back">Cancel</a>
+        <button class="btn-save" onclick="saveSettings()">UPDATE TIME & SETTINGS</button>
+
+        <!-- DANGER ZONE: RESET -->
+        <div class="reset-box">
+            <h3 style="color:#ff4444; margin:0 0 10px 0;">⚠ START FRESH SEASON</h3>
+            <p style="color:#888; font-size:0.8rem; margin-bottom:15px;">
+                Clicking this will <b>RESET ALL SCORES to 0</b> and clear answered questions for ALL users. 
+                <br>Do this only when starting a NEW season.
+            </p>
+            <button class="btn-reset" onclick="resetSeason()">RESET SCORES & START NEW SEASON</button>
+        </div>
+
+        <a href="index.html" class="back">Back to Dashboard</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, update, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, update, get, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
         const app = initializeApp(firebaseConfig);
@@ -82,6 +103,7 @@
             }
         });
 
+        // 1. UPDATE TIME ONLY
         window.saveSettings = () => {
             const data = {
                 seasonName: document.getElementById('sName').value,
@@ -94,8 +116,40 @@
             };
             
             update(ref(db, 'game_settings'), data)
-            .then(() => alert("Season Updated!"))
+            .then(() => alert("Season settings updated! (Scores remain same)"))
             .catch(e => alert(e.message));
+        }
+
+        // 2. RESET SCORES (FOR NEW SEASON)
+        window.resetSeason = async () => {
+            const confirmMsg = "Are you sure? This will:\n1. Make everyone's SCORE = 0\n2. Clear everyone's QUESTION HISTORY\n\nLeaderboard will be cleared!";
+            if(!confirm(confirmMsg)) return;
+
+            const usersRef = ref(db, 'users');
+            
+            try {
+                const snapshot = await get(usersRef);
+                if (!snapshot.exists()) return alert("No users to reset.");
+
+                const updates = {};
+                
+                snapshot.forEach((childSnap) => {
+                    const key = childSnap.key;
+                    // Reset Score to 0
+                    updates[`users/${key}/score`] = 0;
+                    updates[`users/${key}/correct`] = 0;
+                    updates[`users/${key}/wrong`] = 0;
+                    // Clear Answered Questions (Set to null removes the node)
+                    updates[`users/${key}/answered_questions`] = null;
+                    // Reset Cooldown
+                    updates[`users/${key}/nextAvailableTime`] = 0;
+                });
+
+                await update(ref(db), updates);
+                alert("SUCCESS! Season has been reset. Everyone is at 0 points.");
+            } catch (error) {
+                alert("Error resetting: " + error.message);
+            }
         }
     </script>
 </body>
