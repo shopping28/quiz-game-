@@ -2,155 +2,272 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Season Settings</title>
+    <title>Manage Seasons</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: #111; padding: 30px; border: 1px solid #D4AF37; border-radius: 10px; width: 100%; max-width: 500px; }
-        h2 { color: #D4AF37; text-align: center; margin-bottom: 20px; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
         
-        .inp-group { margin-bottom: 12px; }
-        label { display: block; margin-bottom: 5px; color: #D4AF37; font-size: 0.9rem; }
+        .header { text-align: center; border-bottom: 2px solid #D4AF37; padding-bottom: 20px; margin-bottom: 30px; }
+        h2 { color: #D4AF37; margin: 0; }
+        
+        /* ACTIVE SEASON CARD */
+        .active-card { 
+            background: linear-gradient(45deg, #111, #1a1a1a); 
+            border: 2px solid #0f0; 
+            padding: 20px; border-radius: 10px; margin-bottom: 30px; 
+            text-align: center; box-shadow: 0 0 20px rgba(0, 255, 0, 0.1);
+        }
+        .active-badge { background: #0f0; color: #000; padding: 5px 15px; font-weight: bold; border-radius: 20px; font-size: 0.8rem; }
+
+        /* FORM */
+        .create-box { background: #161616; padding: 20px; border-radius: 10px; border: 1px solid #333; }
+        .inp-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .inp-group { flex: 1; }
+        
+        label { display: block; color: #888; margin-bottom: 5px; font-size: 0.9rem; }
         input { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
         
-        .split { display: flex; gap: 10px; }
-
-        /* SAVE BUTTON */
-        .btn-save { width: 100%; padding: 12px; background: #D4AF37; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 5px; }
-        
-        /* RESET BUTTON (DANGER) */
-        .reset-box { margin-top: 30px; border-top: 1px solid #333; padding-top: 20px; text-align: center; }
-        .btn-reset { 
-            width: 100%; padding: 15px; background: #800; color: #fff; 
-            border: 1px solid #f00; font-weight: bold; cursor: pointer; border-radius: 5px; 
-            transition: 0.3s;
+        .btn-create { 
+            width: 100%; padding: 15px; background: #D4AF37; border: none; 
+            font-weight: bold; cursor: pointer; color: #000; font-size: 1rem; margin-top: 10px; 
         }
-        .btn-reset:hover { background: #a00; box-shadow: 0 0 15px #f00; }
+        .btn-create:hover { background: #b8962e; }
+
+        /* SEASON LIST */
+        .list-header { margin-top: 40px; color: #D4AF37; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .season-item { 
+            display: flex; justify-content: space-between; align-items: center; 
+            background: #111; padding: 15px; margin-top: 10px; border-radius: 8px; border-left: 4px solid #555; 
+        }
+        .season-item.active-item { border-left-color: #0f0; background: #0f1a0f; }
         
-        .back { text-align: center; display: block; margin-top: 15px; color: #666; text-decoration: none; }
+        .s-info h4 { margin: 0 0 5px 0; color: #fff; }
+        .s-info p { margin: 0; font-size: 0.85rem; color: #888; }
+        
+        .btn-activate { background: #222; color: #fff; border: 1px solid #555; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        .btn-activate:hover { background: #0f0; color: #000; border-color: #0f0; }
+
+        .btn-delete { background: #300; color: #f88; border: 1px solid #500; padding: 8px; cursor: pointer; margin-left: 5px; }
+        
+        .back-link { display: block; margin-top: 30px; color: #666; text-decoration: none; text-align: center; }
+        
+        /* RESET USERS BUTTON */
+        .reset-section { margin-top: 30px; border-top: 1px dashed #444; padding-top: 20px; text-align: center; }
+        .btn-reset-users { background: #800; color: #fff; padding: 10px 20px; border: none; cursor: pointer; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>SEASON MANAGEMENT</h2>
-        
-        <!-- SEASON SETTINGS -->
-        <div class="inp-group">
-            <label>Season Name</label>
-            <input type="text" id="sName" placeholder="Season 2">
+    <div class="container">
+        <div class="header">
+            <h2>SEASON MANAGER</h2>
         </div>
 
-        <div class="inp-group">
-            <label>Start Date & Time</label>
-            <div class="split">
-                <input type="date" id="sDate">
-                <input type="time" id="sTime">
+        <!-- CURRENTLY ACTIVE -->
+        <div class="active-card">
+            <span class="active-badge">CURRENTLY LIVE</span>
+            <h1 id="liveName" style="margin: 15px 0; color: #D4AF37;">Loading...</h1>
+            <p id="liveTime" style="color:#aaa;">-</p>
+        </div>
+
+        <!-- CREATE NEW -->
+        <div class="create-box">
+            <h3 style="color:#D4AF37; margin-top:0;">Add New Season</h3>
+            
+            <div class="inp-group" style="margin-bottom:15px;">
+                <label>Season Name</label>
+                <input type="text" id="cName" placeholder="e.g. Season 5">
             </div>
-        </div>
 
-        <div class="inp-group">
-            <label>End Date & Time</label>
-            <div class="split">
-                <input type="date" id="eDate">
-                <input type="time" id="eTime">
+            <div class="inp-row">
+                <div class="inp-group">
+                    <label>Start Date</label>
+                    <input type="date" id="cSDate">
+                </div>
+                <div class="inp-group">
+                    <label>Start Time</label>
+                    <input type="time" id="cSTime">
+                </div>
             </div>
+
+            <div class="inp-row">
+                <div class="inp-group">
+                    <label>End Date</label>
+                    <input type="date" id="cEDate">
+                </div>
+                <div class="inp-group">
+                    <label>End Time</label>
+                    <input type="time" id="cETime">
+                </div>
+            </div>
+
+            <div class="inp-row">
+                <div class="inp-group">
+                    <label>Max Q (Limit)</label>
+                    <input type="number" id="cMax" placeholder="10">
+                </div>
+                <div class="inp-group">
+                    <label>Prize Pool</label>
+                    <input type="text" id="cPrize" placeholder="$1000">
+                </div>
+            </div>
+
+            <button class="btn-create" onclick="createSeason()">CREATE & ADD TO LIST</button>
         </div>
 
-        <div class="inp-group">
-            <label>Max Questions Per User</label>
-            <input type="number" id="maxQ">
+        <!-- RESET USER SCORES -->
+        <div class="reset-section">
+            <p style="color:#aaa; font-size:0.9rem;">Starting a new season? Reset user scores to 0.</p>
+            <button class="btn-reset-users" onclick="resetUserScores()">⚠ RESET ALL USER SCORES</button>
         </div>
 
-        <div class="inp-group">
-            <label>Total Prize Pool</label>
-            <input type="text" id="prize">
+        <!-- HISTORY LIST -->
+        <h3 class="list-header">All Seasons List</h3>
+        <div id="seasonList">
+            <p style="text-align:center; color:#555;">Loading seasons...</p>
         </div>
 
-        <button class="btn-save" onclick="saveSettings()">UPDATE TIME & SETTINGS</button>
-
-        <!-- DANGER ZONE: RESET -->
-        <div class="reset-box">
-            <h3 style="color:#ff4444; margin:0 0 10px 0;">⚠ START FRESH SEASON</h3>
-            <p style="color:#888; font-size:0.8rem; margin-bottom:15px;">
-                Clicking this will <b>RESET ALL SCORES to 0</b> and clear answered questions for ALL users. 
-                <br>Do this only when starting a NEW season.
-            </p>
-            <button class="btn-reset" onclick="resetSeason()">RESET SCORES & START NEW SEASON</button>
-        </div>
-
-        <a href="index.html" class="back">Back to Dashboard</a>
+        <a href="index.html" class="back-link">Back to Dashboard</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, update, get, set } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Load Settings
-        get(ref(db, 'game_settings')).then(snap => {
-            if(snap.exists()) {
-                const s = snap.val();
-                document.getElementById('sName').value = s.seasonName || "";
-                document.getElementById('sDate').value = s.startDate || "";
-                document.getElementById('sTime').value = s.startTime || "";
-                document.getElementById('eDate').value = s.endDate || "";
-                document.getElementById('eTime').value = s.endTime || "";
-                document.getElementById('maxQ').value = s.maxQuestions || "";
-                document.getElementById('prize').value = s.prize || "";
+        let activeSeasonId = null;
+
+        // 1. WATCH ACTIVE SEASON
+        onValue(ref(db, 'game_settings/active_season_id'), (snap) => {
+            activeSeasonId = snap.val();
+            renderList(); // Re-render to update green highlights
+        });
+
+        // 2. WATCH ACTIVE SEASON DETAILS (For Top Card)
+        onValue(ref(db, 'game_settings'), (snap) => {
+            const s = snap.val();
+            if(s) {
+                document.getElementById('liveName').innerText = s.seasonName || "No Active Season";
+                document.getElementById('liveTime').innerText = `Start: ${s.startDate} | End: ${s.endDate}`;
             }
         });
 
-        // 1. UPDATE TIME ONLY
-        window.saveSettings = () => {
-            const data = {
-                seasonName: document.getElementById('sName').value,
-                startDate: document.getElementById('sDate').value,
-                startTime: document.getElementById('sTime').value,
-                endDate: document.getElementById('eDate').value,
-                endTime: document.getElementById('eTime').value,
-                prize: document.getElementById('prize').value,
-                maxQuestions: parseInt(document.getElementById('maxQ').value)
-            };
+        // 3. WATCH SEASON LIST
+        let allSeasons = {};
+        onValue(ref(db, 'seasons_list'), (snap) => {
+            if(snap.exists()) {
+                allSeasons = snap.val();
+            } else {
+                allSeasons = {};
+            }
+            renderList();
+        });
+
+        function renderList() {
+            const container = document.getElementById('seasonList');
+            container.innerHTML = "";
             
-            update(ref(db, 'game_settings'), data)
-            .then(() => alert("Season settings updated! (Scores remain same)"))
-            .catch(e => alert(e.message));
+            const keys = Object.keys(allSeasons).reverse(); // Show newest first
+            
+            if(keys.length === 0) {
+                container.innerHTML = "<p style='text-align:center;color:#444'>No seasons created yet.</p>";
+                return;
+            }
+
+            keys.forEach(key => {
+                const s = allSeasons[key];
+                const isActive = (key === activeSeasonId);
+                
+                const div = document.createElement('div');
+                div.className = `season-item ${isActive ? 'active-item' : ''}`;
+                
+                div.innerHTML = `
+                    <div class="s-info">
+                        <h4>${s.seasonName} ${isActive ? '<span style="color:#0f0; font-size:0.7rem">(LIVE)</span>' : ''}</h4>
+                        <p>End: ${s.endDate} @ ${s.endTime} | Limit: ${s.maxQuestions} Qs</p>
+                    </div>
+                    <div>
+                        ${!isActive ? `<button class="btn-activate" onclick="activateSeason('${key}')">ACTIVATE</button>` : '<span style="color:#0f0; font-weight:bold; margin-right:10px;">✔ Active</span>'}
+                        <button class="btn-delete" onclick="deleteSeason('${key}')">✕</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
 
-        // 2. RESET SCORES (FOR NEW SEASON)
-        window.resetSeason = async () => {
-            const confirmMsg = "Are you sure? This will:\n1. Make everyone's SCORE = 0\n2. Clear everyone's QUESTION HISTORY\n\nLeaderboard will be cleared!";
-            if(!confirm(confirmMsg)) return;
+        // 4. CREATE SEASON
+        window.createSeason = () => {
+            const data = {
+                seasonName: document.getElementById('cName').value,
+                startDate: document.getElementById('cSDate').value,
+                startTime: document.getElementById('cSTime').value,
+                endDate: document.getElementById('cEDate').value,
+                endTime: document.getElementById('cETime').value,
+                maxQuestions: parseInt(document.getElementById('cMax').value),
+                prize: document.getElementById('cPrize').value
+            };
 
-            const usersRef = ref(db, 'users');
+            if(!data.seasonName || !data.startDate) return alert("Please fill details");
+
+            // Push to List
+            const newRef = push(ref(db, 'seasons_list'));
+            update(newRef, data).then(() => {
+                alert("Season Created! Click 'ACTIVATE' in the list below to make it live.");
+                // Clear inputs
+                document.getElementById('cName').value = "";
+            });
+        }
+
+        // 5. ACTIVATE SEASON
+        window.activateSeason = (key) => {
+            if(!confirm("Make this season LIVE? Users will see this immediately.")) return;
+
+            const selectedSeason = allSeasons[key];
             
-            try {
-                const snapshot = await get(usersRef);
-                if (!snapshot.exists()) return alert("No users to reset.");
+            // Update Main Game Settings
+            const updates = {
+                "game_settings": selectedSeason, // Copy details to main node
+                "game_settings/active_season_id": key // Track ID
+            };
 
-                const updates = {};
-                
-                snapshot.forEach((childSnap) => {
-                    const key = childSnap.key;
-                    // Reset Score to 0
-                    updates[`users/${key}/score`] = 0;
-                    updates[`users/${key}/correct`] = 0;
-                    updates[`users/${key}/wrong`] = 0;
-                    // Clear Answered Questions (Set to null removes the node)
-                    updates[`users/${key}/answered_questions`] = null;
-                    // Reset Cooldown
-                    updates[`users/${key}/nextAvailableTime`] = 0;
-                });
+            update(ref(db), updates).then(() => {
+                alert("Season Activated!");
+            });
+        }
 
-                await update(ref(db), updates);
-                alert("SUCCESS! Season has been reset. Everyone is at 0 points.");
-            } catch (error) {
-                alert("Error resetting: " + error.message);
+        // 6. DELETE SEASON
+        window.deleteSeason = (key) => {
+            if(key === activeSeasonId) return alert("Cannot delete the active season! Activate another one first.");
+            if(confirm("Delete this season from history?")) {
+                remove(ref(db, `seasons_list/${key}`));
             }
         }
+
+        // 7. RESET USER SCORES
+        window.resetUserScores = async () => {
+            if(!confirm("WARNING: This will reset ALL users' scores to 0. Do this only when starting a NEW season. Continue?")) return;
+
+            const usersRef = ref(db, 'users');
+            const snap = await get(usersRef);
+            
+            if(snap.exists()) {
+                const updates = {};
+                snap.forEach(u => {
+                    const k = u.key;
+                    updates[`users/${k}/score`] = 0;
+                    updates[`users/${k}/answered_questions`] = null;
+                    updates[`users/${k}/nextAvailableTime`] = 0;
+                });
+                update(ref(db), updates).then(() => alert("All scores have been reset to 0."));
+            }
+        }
+
+        // Expose functions globally
+        window.activateSeason = activateSeason;
+        window.deleteSeason = deleteSeason;
     </script>
 </body>
 </html>
