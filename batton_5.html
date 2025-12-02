@@ -3,236 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Admin - Season Manager</title>
+    <title>Super Admin - Season Control</title>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
+        .container { max-width: 700px; margin: 0 auto; }
         
-        /* LIVE STATUS CARD */
-        .live-box { 
-            border: 2px solid #0f0; background: #0a1a0a; 
-            padding: 20px; text-align: center; border-radius: 10px; margin-bottom: 30px; 
+        /* LIVE STATUS */
+        .live-card { 
+            border: 2px solid #333; background: #111; padding: 20px; 
+            text-align: center; border-radius: 10px; margin-bottom: 20px;
         }
-        .live-box.inactive { border-color: #333; background: #111; color: #555; }
+        .live-card.active { border-color: #0f0; background: #051a05; }
+        .live-blink { animation: blink 1s infinite; color: #0f0; font-weight: bold; }
+        @keyframes blink { 50% { opacity: 0; } }
 
         /* FORM */
-        .input-box { background: #161616; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: #222; color: #fff; border: 1px solid #444; box-sizing: border-box; }
+        .box { background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        input { background: #333; color: #fff; border: 1px solid #555; padding: 8px; width: 45%; margin-bottom: 10px; }
+        label { color: #aaa; font-size: 0.8rem; display: block; }
         
-        button { cursor: pointer; padding: 10px; font-weight: bold; border-radius: 5px; border: none; }
-        .btn-add { background: #D4AF37; width: 100%; color: #000; }
-        .btn-live { background: #0f0; color: #000; margin-right: 5px; }
-        .btn-del { background: #f00; color: #fff; }
+        button { cursor: pointer; padding: 10px; border: none; border-radius: 4px; font-weight: bold; }
+        .btn-create { background: #D4AF37; width: 100%; }
+        
+        /* LIST BUTTONS */
+        .season-row { display: flex; justify-content: space-between; background: #222; padding: 10px; margin-top: 5px; border-left: 3px solid #555; align-items: center; }
+        .btn-green { background: #0a0; color: #fff; font-size: 0.8rem; padding: 5px 10px; }
+        .btn-blue { background: #00a; color: #fff; font-size: 0.8rem; padding: 5px 10px; }
+        .btn-red { background: #a00; color: #fff; font-size: 0.8rem; padding: 5px 10px; }
 
-        /* LIST */
-        .season-row { 
-            display: flex; justify-content: space-between; align-items: center; 
-            background: #222; padding: 15px; margin-bottom: 10px; border-radius: 5px; border-left: 5px solid #555; 
-        }
-        .season-row.active { border-left-color: #0f0; background: #0f1a0f; }
-
-        .btn-reset { 
-            background: #500; color: #faa; width: 100%; margin-top: 20px; padding: 15px;
-        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2 style="text-align:center; color:#D4AF37">SEASON CONTROLLER</h2>
+        <h2 style="text-align:center; color:#D4AF37">⚡ INSTANT SEASON CONTROL</h2>
 
-        <!-- 1. LIVE STATUS -->
-        <div id="liveStatusBox" class="live-box inactive">
-            <h3 id="liveTitle">NO SEASON ACTIVE</h3>
-            <p id="liveTime">The game is currently stopped.</p>
-            <button onclick="stopGame()" style="background:#333; color:#fff; border:1px solid #555; margin-top:10px;">STOP GAME MANUALLY</button>
+        <!-- 1. LIVE MONITOR -->
+        <div id="statusBox" class="live-card">
+            <h3>🔴 NO GAME RUNNING</h3>
+            <p>Users verify "Season Ended" screen.</p>
         </div>
 
-        <!-- 2. CREATE NEW -->
-        <div class="input-box">
-            <h3 style="color:#D4AF37; margin-top:0;">Create New Season</h3>
+        <!-- 2. CREATE -->
+        <div class="box">
+            <h3 style="margin-top:0; color:#D4AF37">Create Season</h3>
+            <input type="text" id="sName" placeholder="Season Name (e.g. Round 1)" style="width:96%">
             
-            <label>Season Name (e.g. Morning Round)</label>
-            <input type="text" id="sName" placeholder="Enter Name">
-
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1"><label>Start Date</label><input type="date" id="sDate"></div>
-                <div style="flex:1"><label>Start Time</label><input type="time" id="sTime"></div>
-            </div>
+            <label>Start (Date & Time)</label>
+            <input type="date" id="sDate"> <input type="time" id="sTime">
             
-            <div style="display:flex; gap:10px;">
-                <div style="flex:1"><label>End Date</label><input type="date" id="eDate"></div>
-                <div style="flex:1"><label>End Time</label><input type="time" id="eTime"></div>
-            </div>
-
+            <label>End (Date & Time)</label>
+            <input type="date" id="eDate"> <input type="time" id="eTime">
+            
             <label>Question Limit</label>
-            <input type="number" id="qLimit" placeholder="10">
+            <input type="number" id="limit" placeholder="10" style="width:96%">
 
-            <button class="btn-add" onclick="addSeason()">ADD TO LIST</button>
+            <button class="btn-create" onclick="createSeason()">SAVE TO LIST</button>
         </div>
 
         <!-- 3. LIST -->
-        <h3 style="color:#888">Season History</h3>
+        <h3>All Seasons</h3>
         <div id="listArea">Loading...</div>
 
-        <!-- 4. MANUAL RESET -->
-        <button class="btn-reset" onclick="resetPlayers()">⚠ RESET ALL PLAYER SCORES (Clean Start)</button>
+        <br>
+        <button onclick="stopGame()" style="background:#444; color:#fff; width:100%; padding:15px;">🛑 STOP EVERYTHING (Emergency)</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyDKO9G5GLdHk5D_UCzDx-A76yb80zvesJ4", authDomain: "quiz-55a8d.firebaseapp.com", databaseURL: "https://quiz-55a8d-default-rtdb.firebaseio.com", projectId: "quiz-55a8d", storageBucket: "quiz-55a8d.firebasestorage.app", messagingSenderId: "745030366382", appId: "1:745030366382:web:25d6210f97391136d5693f" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        let activeID = null;
-        let allSeasons = {};
-
-        // --- MONITOR LIVE STATUS ---
+        // --- 1. MONITOR LIVE STATUS ---
         onValue(ref(db, 'game_settings'), (snap) => {
             const val = snap.val();
-            const box = document.getElementById('liveStatusBox');
+            const box = document.getElementById('statusBox');
             
-            if (val && val.seasonName) {
-                // Game is Running
-                activeID = val.active_season_id;
-                box.className = "live-box"; // Green border
-                document.getElementById('liveTitle').innerText = "✅ LIVE: " + val.seasonName;
-                document.getElementById('liveTime').innerText = `Ends: ${val.endDate} at ${val.endTime}`;
+            if(val && val.seasonName) {
+                box.className = "live-card active";
+                box.innerHTML = `
+                    <h3><span class="live-blink">● LIVE NOW</span>: ${val.seasonName}</h3>
+                    <p>End Time: ${val.endTime}</p>
+                    <small>Game ID: ${val.active_season_id}</small>
+                `;
             } else {
-                // Game is Stopped
-                activeID = null;
-                box.className = "live-box inactive";
-                document.getElementById('liveTitle').innerText = "🔴 NO SEASON ACTIVE";
-                document.getElementById('liveTime').innerText = "Game is closed for users.";
+                box.className = "live-card";
+                box.innerHTML = `<h3>🔴 GAME STOPPED</h3><p>Select a season below to start.</p>`;
             }
-            renderList();
         });
 
-        // --- MONITOR LIST ---
+        // --- 2. LOAD LIST ---
+        let allSeasons = {};
         onValue(ref(db, 'seasons_list'), (snap) => {
             allSeasons = snap.val() || {};
-            renderList();
-        });
-
-        function renderList() {
-            const div = document.getElementById('listArea');
-            div.innerHTML = "";
+            const area = document.getElementById('listArea');
+            area.innerHTML = "";
             
-            const keys = Object.keys(allSeasons).reverse();
-            if(keys.length === 0) {
-                div.innerHTML = "<p>No seasons found.</p>";
-                return;
-            }
-
-            keys.forEach(k => {
-                const s = allSeasons[k];
-                const isActive = (k === activeID);
-                
-                const row = document.createElement('div');
-                row.className = `season-row ${isActive ? 'active' : ''}`;
-                row.innerHTML = `
+            Object.keys(allSeasons).reverse().forEach(key => {
+                const s = allSeasons[key];
+                const div = document.createElement('div');
+                div.className = 'season-row';
+                div.innerHTML = `
                     <div>
-                        <strong>${s.seasonName}</strong><br>
-                        <small>${s.startTime} - ${s.endTime}</small>
+                        <strong style="color:#D4AF37">${s.seasonName}</strong><br>
+                        <small style="color:#888">${s.startDate} ${s.startTime} ⮕ ${s.endTime}</small>
                     </div>
-                    <div>
-                        ${!isActive ? `<button class="btn-live" onclick="goLive('${k}')">ACTIVATE</button>` : '<span style="color:#0f0; margin-right:10px; font-weight:bold;">LIVE</span>'}
-                        <button class="btn-del" onclick="delSeason('${k}')">DELETE</button>
+                    <div style="display:flex; flex-direction:column; gap:5px;">
+                        <button class="btn-green" onclick="forceStart('${key}')">⚡ START NOW</button>
+                        <button class="btn-blue" onclick="activateNormal('${key}')">Use Original Time</button>
+                        <button class="btn-red" onclick="deleteS('${key}')">Del</button>
                     </div>
                 `;
-                div.appendChild(row);
+                area.appendChild(div);
             });
-        }
+        });
 
-        // --- FUNCTIONS ---
+        // --- 3. FUNCTIONS ---
 
-        // 1. ADD SEASON
-        window.addSeason = () => {
+        window.createSeason = () => {
             const data = {
                 seasonName: document.getElementById('sName').value,
                 startDate: document.getElementById('sDate').value,
                 startTime: document.getElementById('sTime').value,
                 endDate: document.getElementById('eDate').value,
                 endTime: document.getElementById('eTime').value,
-                maxQuestions: document.getElementById('qLimit').value || 10
+                maxQuestions: parseInt(document.getElementById('limit').value) || 10
             };
-            if(!data.seasonName || !data.startDate) return alert("Please fill details");
-            
+            if(!data.seasonName || !data.startDate) return alert("Fill data properly!");
             push(ref(db, 'seasons_list'), data);
-            alert("Season Added!");
+            alert("Saved!");
         }
 
-        // 2. ACTIVATE (GO LIVE) - WITH AUTO RESET CHECK
-        window.goLive = (key) => {
+        // OPTION A: MAGIC BUTTON (Start NOW)
+        // এটাতে ক্লিক করলে আগের টাইম যাই থাকুক, সেটা পাল্টে 'এখন' করে দেবে।
+        window.forceStart = (key) => {
+            if(!confirm("Start this season IMMEDIATELY? (I will update Start Time to NOW)")) return;
+
             const s = allSeasons[key];
+            const now = new Date();
+            const oneHourLater = new Date(now.getTime() + 60*60*1000); // 1 Hour Game
+
+            // Format Dates for HTML Inputs/Display (YYYY-MM-DD)
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth()+1).padStart(2,'0');
+            const dd = String(now.getDate()).padStart(2,'0');
             
-            // Ask admin if they want to clear old scores
-            let doReset = confirm("Do you want to RESET all player scores for this new season?\n\nOK = Yes, Reset Scores (Players start fresh)\nCancel = No, Keep Scores");
+            const hh = String(now.getHours()).padStart(2,'0');
+            const min = String(now.getMinutes()).padStart(2,'0');
 
-            const updates = {};
-            // Set new game settings
-            updates['game_settings'] = s;
-            updates['game_settings/active_season_id'] = key;
+            // Update the object
+            s.startDate = `${yyyy}-${mm}-${dd}`;
+            s.startTime = `${hh}:${min}`; // Start NOW
+            
+            // End time 1 hour later
+            s.endDate = `${yyyy}-${mm}-${dd}`;
+            s.endTime = `${oneHourLater.getHours()}:${String(oneHourLater.getMinutes()).padStart(2,'0')}`;
+            s.active_season_id = key;
 
-            if(doReset) {
-                // If yes, we prepare to clear users
-                resetPlayers(true).then(() => {
-                    update(ref(db), updates); // Then update season
+            // 1. Reset Users?
+            if(confirm("Reset all player scores to 0?")) {
+                get(ref(db, 'users')).then(snap => {
+                    if(snap.exists()) {
+                        const updates = {};
+                        snap.forEach(u => {
+                            updates[`users/${u.key}/score`] = 0;
+                            updates[`users/${u.key}/answered_questions`] = null;
+                            updates[`users/${u.key}/nextAvailableTime`] = 0;
+                        });
+                        updates['game_settings'] = s; // Set game live same time
+                        return update(ref(db), updates);
+                    } else {
+                        return set(ref(db, 'game_settings'), s);
+                    }
+                }).then(() => alert("Started! Check Live Box."));
+            } else {
+                // Just start without reset
+                set(ref(db, 'game_settings'), s);
+            }
+        }
+
+        // OPTION B: Normal Activate (Uses your set time)
+        window.activateNormal = (key) => {
+            const s = allSeasons[key];
+            s.active_season_id = key;
+            
+            if(confirm("Reset scores?")) {
+                // Logic same as above for reset
+                get(ref(db, 'users')).then(snap => {
+                    const updates = {};
+                    if(snap.exists()) {
+                        snap.forEach(u => {
+                            updates[`users/${u.key}/score`] = 0;
+                            updates[`users/${u.key}/answered_questions`] = null;
+                        });
+                    }
+                    updates['game_settings'] = s;
+                    update(ref(db), updates);
                 });
             } else {
-                update(ref(db), updates); // Just update season
+                set(ref(db, 'game_settings'), s);
             }
         }
 
-        // 3. DELETE SEASON (SMART DELETE)
-        window.delSeason = (key) => {
-            if(!confirm("Delete this season?")) return;
-
-            // If we are deleting the CURRENTLY LIVE season, stop the game first
-            if(key === activeID) {
-                remove(ref(db, 'game_settings')); // This stops the game instantly
-            }
-            
-            // Remove from history list
-            remove(ref(db, `seasons_list/${key}`));
+        window.deleteS = (key) => {
+            if(confirm("Delete?")) remove(ref(db, `seasons_list/${key}`));
         }
 
-        // 4. STOP GAME MANUALLY
         window.stopGame = () => {
-            if(confirm("Stop the current game? Users will see 'Season Ended'.")) {
-                remove(ref(db, 'game_settings'));
-            }
+            remove(ref(db, 'game_settings'));
         }
 
-        // 5. RESET PLAYERS LOGIC
-        window.resetPlayers = async (silent = false) => {
-            if(!silent && !confirm("WARNING: This will delete ALL user scores and history. Proceed?")) return;
-
-            const snap = await get(ref(db, 'users'));
-            if(snap.exists()) {
-                const updates = {};
-                snap.forEach(u => {
-                    updates[`users/${u.key}/score`] = 0;
-                    updates[`users/${u.key}/answered_questions`] = null;
-                    updates[`users/${u.key}/nextAvailableTime`] = 0;
-                });
-                await update(ref(db), updates);
-                if(!silent) alert("All players reset to 0.");
-            } else {
-                if(!silent) alert("No users found.");
-            }
-        }
-
-        // Make global
-        window.addSeason = addSeason;
-        window.goLive = goLive;
-        window.delSeason = delSeason;
-        window.stopGame = stopGame;
-        window.resetPlayers = resetPlayers;
-
+        // Helper for update
+        window.update = update;
     </script>
 </body>
 </html>
